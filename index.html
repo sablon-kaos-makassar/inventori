@@ -413,6 +413,13 @@
         ]
       },
       {
+        key: 'celemek-anak', label: 'Apron Anak', emoji: '🧒', dot: '#F5A623', group: 'celemek-anak',
+        items: [
+          // Data apron anak akan diisi dari Apps Script
+          // Tambahkan manual sesuai sheet jika perlu fallback
+        ]
+      },
+      {
         key: 'topi-jamur', label: 'Topi Jamur', emoji: '🧢', dot: '#2BC4B4', group: 'topi',
         items: [
           { code:'JA001', name:'Topi Jamur - Hitam',   min:2, stock:4  },
@@ -500,7 +507,7 @@
         totalStok += s;
         if (item.stock < item.min) restockItems.push({ ...item, dot: cat.dot });
         if (cat.group === 'totebag') { stokTotebag += s; jenisTotebag++; }
-        if (cat.group === 'celemek') { stokCelemek += s; jenisCelemek++; }
+        if (cat.group === 'celemek' || cat.group === 'celemek-anak') { stokCelemek += s; jenisCelemek++; }
         if (cat.group === 'topi')    { stokTopi += s;    jenisTopi++;    }
       });
     });
