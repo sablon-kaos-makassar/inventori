@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Monito – Inventori</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #FFFFFF;
+    --ink:      #1A1A1A;
+    --ink2:     #555555;
+    --ink3:     #999999;
+    --border:   #EBEBEB;
+    --orange:   #E8603C;
+    --orange-dk:#C94E2C;
+    --orange-lt:#FEF0EC;
+    --radius:   16px;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-top: 110px;
+  }
+
+  .sticky-header { position: fixed; top: 0; left: 0; right: 0; z-index: 10; background: #fff; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
+  }
+  .brand { font-size: 22px; font-weight: 800; color: var(--ink); letter-spacing: -.5px; }
+  .brand span { color: var(--orange); }
+  .hamburger {
+    width: 42px; height: 42px; background: var(--orange-lt); border: none; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+  }
+  .hamburger svg { width: 20px; height: 20px; stroke: var(--orange); stroke-width: 2.2; fill: none; stroke-linecap: round; }
+
+  .tab-nav {
+    display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x;
+    border-bottom: 1.5px solid var(--border); scrollbar-width: none; padding: 0 12px;
+  }
+  .tab-nav::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    display: flex; align-items: center; gap: 5px; padding: 13px 14px 11px;
+    border: none; background: none; font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px; font-weight: 600; color: var(--ink3); cursor: pointer; white-space: nowrap;
+    border-bottom: 2.5px solid transparent; margin-bottom: -1.5px;
+    transition: color .2s, border-color .2s; flex-shrink: 0;
+  }
+  .tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
+  .tab-btn:hover:not(.active) { color: var(--ink2); }
+
+  /* SEARCH BAR */
+  .search-bar {
+    background: #fff; border-bottom: 1px solid var(--border);
+    padding: 11px 16px; display: flex; align-items: center; gap: 8px;
+  }
+  .search-wrap { flex: 1; position: relative; }
+  .search-wrap svg {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    width: 16px; height: 16px; stroke: var(--ink3); stroke-width: 2; fill: none; pointer-events: none;
+  }
+  .search-wrap input {
+    width: 100%; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 500;
+    padding: 9px 12px 9px 36px; border: 1.5px solid var(--border); border-radius: 10px;
+    background: #F9F9F9; color: var(--ink); transition: border-color .2s;
+  }
+  .search-wrap input:focus { outline: none; border-color: var(--orange); }
+  .search-wrap input::placeholder { color: var(--ink3); }
+  .seg-wrap { display: flex; gap: 4px; flex-shrink: 0; }
+  .seg-btn {
+    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 700;
+    padding: 8px 12px; background: #F2F2F2; color: var(--ink2); border: none; border-radius: 10px;
+    cursor: pointer; transition: all .2s; white-space: nowrap;
+  }
+  .seg-btn.active { background: var(--orange); color: #fff; }
+
+  /* MAIN */
+  .main { padding: 20px 16px 80px; }
+
+  .sec-title {
+    font-size: 10px; font-weight: 700; color: var(--ink3);
+    text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px;
+  }
+
+  /* ALERT BANNER - single section all restock items */
+  .alert-banner {
+    background: #FFF4F2; border: 1.5px solid #FDDDD7; border-radius: var(--radius);
+    padding: 14px 16px; margin-bottom: 24px; animation: fadeUp .35s both;
+  }
+  .alert-top {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .alert-icon { font-size: 18px; flex-shrink: 0; }
+  .alert-title { font-size: 13px; font-weight: 700; color: #B03A20; flex: 1; }
+  .alert-count {
+    font-size: 11px; font-weight: 700; padding: 3px 9px;
+    background: #B03A20; color: #fff; border-radius: 20px; flex-shrink: 0;
+  }
+  .alert-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .alert-chip {
+    font-size: 11px; font-weight: 600; padding: 4px 9px;
+    background: #fff; border: 1px solid #FDDDD7; border-radius: 20px; color: #B03A20;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* KPI */
+  .kpi-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 24px; }
+  .kpi-card { border-radius: var(--radius); padding: 16px 14px; animation: fadeUp .45s both; }
+  .kpi-card.c-orange { background: #FEF0EC; }
+  .kpi-card.c-blue   { background: #EEF3FE; }
+  .kpi-card.c-teal   { background: #EBF8F8; }
+  .kpi-card.c-yellow { background: #FEF9EC; }
+  .kpi-card.c-green  { background: #EDFAF3; }
+  .kpi-card.c-red    { background: #FFF4F2; }
+  .kpi-emoji { font-size: 22px; margin-bottom: 8px; display: block; }
+  .kpi-label { font-size: 12px; font-weight: 500; color: var(--ink2); margin-bottom: 4px; }
+  .kpi-value { font-size: clamp(24px,6vw,34px); font-weight: 800; line-height: 1; color: var(--ink); }
+  .kpi-value.red { color: #B03A20; }
+  .kpi-sub   { font-size: 11px; color: var(--ink3); margin-top: 5px; line-height: 1.4; }
+
+  /* PANELS */
+  .panels-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  .panel {
+    background: #fff; border-radius: var(--radius);
+    padding: 16px 14px; box-shadow: 0 2px 12px rgba(0,0,0,.06); animation: fadeUp .55s both;
+  }
+  .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .panel-title { font-size: 14px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 7px; }
+  .panel-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; flex-shrink: 0; }
+  .badge-ok     { background: var(--orange-lt); color: var(--orange); }
+  .badge-warn   { background: #FFF4F2; color: #B03A20; }
+
+  /* STOCK ROWS */
+  .stock-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .stock-item:last-child { border-bottom: none; }
+  .stock-item.hidden { display: none; }
+  .stock-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .stock-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .stock-code { font-family: 'DM Mono',monospace; font-size: 10px; color: var(--ink3); }
+  .stock-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .stock-num { font-family: 'DM Mono',monospace; font-size: 16px; font-weight: 500; color: var(--ink); min-width: 28px; text-align: right; }
+  .stock-status { font-size: 9px; font-weight: 700; padding: 3px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: .5px; }
+  .s-aman    { background: #EDFAF3; color: #1A7A50; }
+  .s-restock { background: #FFF4F2; color: #B03A20; }
+
+  /* SLIDE MENU */
+  .menu-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 100; }
+  .menu-overlay.open { display: block; animation: fadeIn .2s both; }
+  .slide-menu {
+    position: fixed; top: 0; right: 0; width: min(320px,88vw); height: 100%;
+    background: #fff; border-radius: 20px 0 0 20px; display: flex; flex-direction: column;
+    transform: translateX(100%); transition: transform .28s cubic-bezier(.4,0,.2,1); z-index: 101; overflow: hidden;
+  }
+  .slide-menu.open { transform: translateX(0); }
+  .slide-menu-header {
+    padding: 24px 20px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between;
+  }
+  .slide-brand { font-size: 20px; font-weight: 800; color: var(--ink); letter-spacing: -.5px; }
+  .slide-brand span { color: var(--orange); }
+  .slide-sub { font-size: 12px; color: var(--ink3); margin-top: 2px; }
+  .slide-close {
+    width: 36px; height: 36px; background: #F5F5F5; border: none; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+  }
+  .slide-close svg { width: 16px; height: 16px; stroke: var(--ink2); stroke-width: 2.2; fill: none; stroke-linecap: round; }
+  .slide-menu-body { flex: 1; }
+  .slide-menu-footer { border-top: 1px solid var(--border); padding: 8px 20px 28px; display: flex; flex-direction: column; }
+  .slide-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0; cursor: pointer; border: none; background: none; width: 100%;
+    font-family: 'Plus Jakarta Sans', sans-serif; border-bottom: 1px solid var(--border); text-align: left;
+  }
+  .slide-item-left { display: flex; align-items: center; gap: 12px; }
+  .slide-item-emoji { font-size: 18px; width: 24px; text-align: center; }
+  .slide-item-label { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .slide-item-arrow { font-size: 18px; color: var(--ink3); }
+  .toggle-wrap { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
+  .toggle-left { display: flex; align-items: center; gap: 12px; }
+  .toggle-label { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .toggle {
+    width: 46px; height: 27px; background: #E0E0E0; border-radius: 99px;
+    position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0; border: none;
+  }
+  .toggle.on { background: var(--orange); }
+  .toggle::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 21px; height: 21px; background: #fff; border-radius: 50%;
+    transition: left .2s; box-shadow: 0 1px 4px rgba(0,0,0,.15);
+  }
+  .toggle.on::after { left: 22px; }
+  .slide-version { font-size: 12px; color: var(--ink3); padding-top: 14px; margin-top: 4px; }
+
+  @media (min-width: 700px) {
+    .topbar { padding: 20px 32px 16px; }
+    .tab-nav { padding: 0 24px; }
+    .search-bar { padding: 12px 32px; }
+    .main { padding: 28px 32px 80px; max-width: 1200px; }
+    .kpi-grid { grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 12px; }
+    .panels-grid { grid-template-columns: repeat(auto-fill,minmax(340px,1fr)); }
+  }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  .kpi-card:nth-child(1){ animation-delay:.05s }
+  .kpi-card:nth-child(2){ animation-delay:.10s }
+  .kpi-card:nth-child(3){ animation-delay:.15s }
+  .kpi-card:nth-child(4){ animation-delay:.20s }
+  .kpi-card:nth-child(5){ animation-delay:.25s }
+  .kpi-card:nth-child(6){ animation-delay:.30s }
+</style>
+</head>
+<body>
+
+<div class="sticky-header">
+  <div class="topbar">
+    <div class="brand">Monito<span>.</span></div>
+    <button class="hamburger" onclick="openMenu()">
+      <svg viewBox="0 0 20 20"><line x1="2" y1="5" x2="18" y2="5"/><line x1="2" y1="10" x2="18" y2="10"/><line x1="2" y1="15" x2="18" y2="15"/></svg>
+    </button>
+  </div>
+  <div class="tab-nav">
+    <button class="tab-btn" onclick="goTo('presensi')">📅 Presensi</button>
+    <button class="tab-btn" onclick="goTo('penjahit')">✂️ Penjahit</button>
+    <button class="tab-btn" onclick="goTo('keuangan')">💰 Keuangan</button>
+    <button class="tab-btn active">📦 Inventori</button>
+    <button class="tab-btn" onclick="goTo('produksi')">🏭 Produksi</button>
+  </div>
+</div>
+
+<div class="search-bar">
+  <div class="search-wrap">
+    <svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>
+    <input type="text" id="search-input" placeholder="Cari nama atau kode produk..." oninput="applyFilter()" />
+  </div>
+  <div class="seg-wrap">
+    <button class="seg-btn active" id="seg-semua" onclick="setFilter('semua')">Semua</button>
+    <button class="seg-btn" id="seg-restock" onclick="setFilter('restock')">⚠️ Restock</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ALERT: semua produk restock dalam 1 section -->
+  <div class="alert-banner" id="alert-banner" style="display:none">
+    <div class="alert-top">
+      <span class="alert-icon">🔴</span>
+      <span class="alert-title">Perlu Restock Segera</span>
+      <span class="alert-count" id="alert-count"></span>
+    </div>
+    <div class="alert-chips" id="alert-chips"></div>
+  </div>
+
+  <!-- KPI -->
+  <div class="sec-title">Ringkasan Inventori</div>
+  <div class="kpi-grid">
+    <div class="kpi-card c-orange">
+      <span class="kpi-emoji">📦</span>
+      <div class="kpi-label">Total Jenis Produk</div>
+      <div class="kpi-value" id="kpi-jenis">—</div>
+      <div class="kpi-sub">SKU terdaftar</div>
+    </div>
+    <div class="kpi-card c-blue">
+      <span class="kpi-emoji">🔢</span>
+      <div class="kpi-label">Total Stok</div>
+      <div class="kpi-value" id="kpi-total">—</div>
+      <div class="kpi-sub">semua kategori</div>
+    </div>
+    <div class="kpi-card c-teal">
+      <span class="kpi-emoji">👜</span>
+      <div class="kpi-label">Stok Totebag</div>
+      <div class="kpi-value" id="kpi-totebag">—</div>
+      <div class="kpi-sub" id="sub-totebag">— jenis</div>
+    </div>
+    <div class="kpi-card c-yellow">
+      <span class="kpi-emoji">👘</span>
+      <div class="kpi-label">Stok Celemek</div>
+      <div class="kpi-value" id="kpi-celemek">—</div>
+      <div class="kpi-sub" id="sub-celemek">— jenis</div>
+    </div>
+    <div class="kpi-card c-green">
+      <span class="kpi-emoji">🧢</span>
+      <div class="kpi-label">Stok Topi</div>
+      <div class="kpi-value" id="kpi-topi">—</div>
+      <div class="kpi-sub" id="sub-topi">— jenis</div>
+    </div>
+    <div class="kpi-card c-red">
+      <span class="kpi-emoji">⚠️</span>
+      <div class="kpi-label">Perlu Restock</div>
+      <div class="kpi-value red" id="kpi-restock">—</div>
+      <div class="kpi-sub">item di bawah min stock</div>
+    </div>
+  </div>
+
+  <!-- STOCK LIST PER KATEGORI -->
+  <div class="sec-title">Daftar Stok per Kategori</div>
+  <div class="panels-grid" id="panels-grid"></div>
+
+</div>
+
+<div class="menu-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+<div class="slide-menu" id="slide-menu">
+  <div class="slide-menu-header">
+    <div>
+      <div class="slide-brand">Monito<span>.</span></div>
+      <div class="slide-sub">Sistem manajemen bisnis</div>
+    </div>
+    <button class="slide-close" onclick="closeMenu()">
+      <svg viewBox="0 0 16 16"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg>
+    </button>
+  </div>
+  <div class="slide-menu-body"></div>
+  <div class="slide-menu-footer">
+    <button class="slide-item" onclick="alert('Pengaturan')">
+      <div class="slide-item-left">
+        <span class="slide-item-emoji">⚙️</span>
+        <span class="slide-item-label">Pengaturan</span>
+      </div>
+      <span class="slide-item-arrow">›</span>
+    </button>
+    <div class="toggle-wrap">
+      <div class="toggle-left">
+        <span class="slide-item-emoji">🌙</span>
+        <span class="toggle-label">Mode gelap</span>
+      </div>
+      <button class="toggle" id="dark-toggle" onclick="toggleDark()"></button>
+    </div>
+    <div class="slide-version">v1.0 · Monito App</div>
+  </div>
+</div>
+
+<script>
+  // ── NAVIGASI ──
+  function goTo(id) {
+    const links = {
+      presensi: 'https://sablon-kaos-makassar.github.io/presensi-karyawan',
+      penjahit: 'https://sablon-kaos-makassar.github.io/penjahit',
+      keuangan: 'https://sablon-kaos-makassar.github.io/laporan-keuangan',
+      produksi: 'https://sablon-kaos-makassar.github.io/produksi',
+    };
+    if (links[id]) window.location.href = links[id];
+  }
+
+  function openMenu() {
+    document.getElementById('menu-overlay').classList.add('open');
+    setTimeout(() => document.getElementById('slide-menu').classList.add('open'), 10);
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMenu() {
+    document.getElementById('slide-menu').classList.remove('open');
+    document.getElementById('menu-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function toggleDark() { document.getElementById('dark-toggle').classList.toggle('on'); }
+
+  function fixOffset() {
+    document.body.style.paddingTop = document.querySelector('.sticky-header').offsetHeight + 'px';
+  }
+  window.addEventListener('resize', fixOffset);
+
+  // ── DATA STATIS (ganti dengan fetch Apps Script saat backend siap) ──
+  const DATA = {
+    categories: [
+      {
+        key: 'totebag-premium', label: 'Totebag Premium', emoji: '👜', dot: '#E8603C', group: 'totebag',
+        items: [
+          { code:'P001', name:'Premium - Putih Gading',            min:10, stock:29  },
+          { code:'P002', name:'Premium - Putih Gading - Resleting',min:10, stock:170 },
+          { code:'P003', name:'Premium - Hitam',                   min:10, stock:62  },
+          { code:'P004', name:'Premium - Hitam - Resleting',       min:10, stock:0   },
+          { code:'B001', name:'Blacu',                             min:10, stock:62  },
+        ]
+      },
+      {
+        key: 'totebag-eco', label: 'Totebag Eco', emoji: '🌿', dot: '#27AE60', group: 'totebag',
+        items: [
+          { code:'E001', name:'Eco - Putih Gading',              min:12, stock:102 },
+          { code:'E002', name:'Eco - Putih Gading - Resleting',  min:5,  stock:60  },
+          { code:'E003', name:'Eco - Hitam',                     min:5,  stock:-1  },
+          { code:'E004', name:'Eco - Hitam - Resleting',         min:5,  stock:35  },
+        ]
+      },
+      {
+        key: 'celemek', label: 'Celemek (Apron)', emoji: '👘', dot: '#5B8DEF', group: 'celemek',
+        items: [
+          { code:'C001', name:'Apron - Hitam',     min:20, stock:12 },
+          { code:'C002', name:'Apron - Merah',     min:10, stock:0  },
+          { code:'C003', name:'Apron - Coklat Tua',min:10, stock:7  },
+          { code:'C004', name:'Apron - Maroon',    min:10, stock:15 },
+          { code:'C005', name:'Apron - Navy',      min:10, stock:0  },
+          { code:'C006', name:'Apron - Kuning',    min:10, stock:13 },
+          { code:'C007', name:'Apron - Biru',      min:10, stock:3  },
+          { code:'C008', name:'Apron - Orange',    min:10, stock:5  },
+          { code:'C009', name:'Apron - Hijau',     min:10, stock:28 },
+          { code:'C010', name:'Apron - Hijau Tua', min:10, stock:19 },
+          { code:'C011', name:'Apron - Pink',      min:10, stock:8  },
+          { code:'C012', name:'Apron - Krem',      min:10, stock:21 },
+          { code:'C013', name:'Apron - Soft Pink', min:10, stock:12 },
+          { code:'C014', name:'Apron - Putih',     min:10, stock:30 },
+        ]
+      },
+      {
+        key: 'topi-jamur', label: 'Topi Jamur', emoji: '🧢', dot: '#2BC4B4', group: 'topi',
+        items: [
+          { code:'JA001', name:'Topi Jamur - Hitam',   min:2, stock:4  },
+          { code:'JA002', name:'Topi Jamur - Putih',   min:2, stock:20 },
+          { code:'JA003', name:'Topi Jamur - Merah',   min:2, stock:2  },
+          { code:'JA004', name:'Topi Jamur - Cokelat', min:2, stock:16 },
+          { code:'JA005', name:'Topi Jamur - Maroon',  min:2, stock:26 },
+          { code:'JA006', name:'Topi Jamur - Krem',    min:2, stock:18 },
+          { code:'JA007', name:'Topi Jamur - Orange',  min:2, stock:13 },
+          { code:'JA008', name:'Topi Jamur - Navy',    min:2, stock:2  },
+          { code:'JA009', name:'Topi Jamur - Pink',    min:2, stock:12 },
+          { code:'JA010', name:'Topi Jamur - Benhur',  min:2, stock:7  },
+        ]
+      },
+      {
+        key: 'topi-jaring', label: 'Topi Jaring', emoji: '🎩', dot: '#9B59B6', group: 'topi',
+        items: [
+          { code:'JR001', name:'Topi Jaring - Hitam',     min:5, stock:19 },
+          { code:'JR002', name:'Topi Jaring - Orange',    min:5, stock:38 },
+          { code:'JR003', name:'Topi Jaring - Kuning',    min:5, stock:25 },
+          { code:'JR004', name:'Topi Jaring - Coklat',    min:5, stock:20 },
+          { code:'JR005', name:'Topi Jaring - Maroon',    min:5, stock:35 },
+          { code:'JR006', name:'Topi Jaring - Merah',     min:5, stock:6  },
+          { code:'JR007', name:'Topi Jaring - Pink',      min:5, stock:8  },
+          { code:'JR008', name:'Topi Jaring - Hijau',     min:5, stock:10 },
+          { code:'JR009', name:'Topi Jaring - Benhur',    min:5, stock:16 },
+          { code:'JR010', name:'Topi Jaring - Hijau Tua', min:5, stock:5  },
+          { code:'JR011', name:'Topi Jaring - Navy',      min:5, stock:12 },
+          { code:'JR012', name:'Topi Jaring - Biru Muda', min:5, stock:5  },
+          { code:'JR013', name:'Topi Jaring - Ungu',      min:5, stock:2  },
+          { code:'JR014', name:'Topi Jaring - Cream',     min:5, stock:5  },
+          { code:'JR015', name:'Topi Jaring - Putih',     min:5, stock:9  },
+        ]
+      },
+    ]
+  };
+
+  // ── STATE ──
+  let activeFilter = 'semua';
+
+  function setFilter(f) {
+    activeFilter = f;
+    document.getElementById('seg-semua').classList.toggle('active', f === 'semua');
+    document.getElementById('seg-restock').classList.toggle('active', f === 'restock');
+    applyFilter();
+  }
+
+  function normalize(s) { return s.toLowerCase().replace(/-/g, ' ').replace(/\s+/g, ' ').trim(); }
+
+  function applyFilter() {
+    const q = normalize(document.getElementById('search-input').value);
+    document.querySelectorAll('.stock-item').forEach(el => {
+      const matchSearch = !q || normalize(el.dataset.name).includes(q);
+      const matchFilter = activeFilter === 'semua' || (activeFilter === 'restock' && el.dataset.restock === '1');
+      el.classList.toggle('hidden', !(matchSearch && matchFilter));
+    });
+    document.querySelectorAll('.panel[data-panel]').forEach(panel => {
+      panel.style.display = panel.querySelectorAll('.stock-item:not(.hidden)').length ? '' : 'none';
+    });
+  }
+
+  function fmt(n) { return Number(n || 0).toLocaleString('id-ID'); }
+
+  function renderDashboard(data) {
+    let totalJenis = 0, totalStok = 0;
+    let stokTotebag = 0, jenisTotebag = 0;
+    let stokCelemek = 0, jenisCelemek = 0;
+    let stokTopi = 0, jenisTopi = 0;
+    const restockItems = [];
+
+    data.categories.forEach(cat => {
+      cat.items.forEach(item => {
+        totalJenis++;
+        const s = Math.max(0, item.stock);
+        totalStok += s;
+        if (item.stock < item.min) restockItems.push({ ...item, dot: cat.dot });
+        if (cat.group === 'totebag') { stokTotebag += s; jenisTotebag++; }
+        if (cat.group === 'celemek') { stokCelemek += s; jenisCelemek++; }
+        if (cat.group === 'topi')    { stokTopi += s;    jenisTopi++;    }
+      });
+    });
+
+    // KPIs
+    document.getElementById('kpi-jenis').textContent   = fmt(totalJenis);
+    document.getElementById('kpi-total').textContent   = fmt(totalStok);
+    document.getElementById('kpi-totebag').textContent = fmt(stokTotebag);
+    document.getElementById('kpi-celemek').textContent = fmt(stokCelemek);
+    document.getElementById('kpi-topi').textContent    = fmt(stokTopi);
+    document.getElementById('kpi-restock').textContent = restockItems.length;
+    document.getElementById('sub-totebag').textContent = jenisTotebag + ' jenis';
+    document.getElementById('sub-celemek').textContent = jenisCelemek + ' jenis';
+    document.getElementById('sub-topi').textContent    = jenisTopi + ' jenis';
+
+    // Alert banner — semua produk restock dalam 1 section
+    if (restockItems.length > 0) {
+      document.getElementById('alert-banner').style.display = '';
+      document.getElementById('alert-count').textContent = restockItems.length + ' item';
+      document.getElementById('alert-chips').innerHTML = restockItems.map(r =>
+        `<span class="alert-chip">
+          <span class="chip-dot" style="background:${r.dot}"></span>
+          ${r.name}
+          <strong>(${r.stock})</strong>
+        </span>`
+      ).join('');
+    }
+
+    // Panels per kategori
+    document.getElementById('panels-grid').innerHTML = data.categories.map(cat => {
+      const restockCount = cat.items.filter(i => i.stock < i.min).length;
+      const rows = cat.items.map(item => {
+        const needsRestock = item.stock < item.min;
+        return `<div class="stock-item"
+                     data-name="${(item.name + ' ' + item.code).toLowerCase()}"
+                     data-restock="${needsRestock ? '1' : '0'}">
+          <div class="stock-left">
+            <div class="stock-name">${item.name}</div>
+            <div class="stock-code">${item.code} · min ${item.min}</div>
+          </div>
+          <div class="stock-right">
+            <div class="stock-num">${item.stock}</div>
+            <span class="stock-status ${needsRestock ? 's-restock' : 's-aman'}">${needsRestock ? 'Restock' : 'Aman'}</span>
+          </div>
+        </div>`;
+      }).join('');
+
+      return `<div class="panel" data-panel="${cat.key}">
+        <div class="panel-header">
+          <div class="panel-title">${cat.emoji} ${cat.label}</div>
+          ${restockCount > 0
+            ? `<span class="panel-badge badge-warn">⚠️ ${restockCount} restock</span>`
+            : `<span class="panel-badge badge-ok">${cat.items.length} item</span>`}
+        </div>
+        ${rows}
+      </div>`;
+    }).join('');
+  }
+
+  // ── APPS SCRIPT URL ── ganti dengan URL deployment kamu
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    fixOffset();
+    fetch(APPS_SCRIPT_URL)
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) throw new Error(data.error);
+        renderDashboard(data);
+      })
+      .catch(() => {
+        renderDashboard(DATA);
+      });
+  });
+</script>
+</body>
+</html>
