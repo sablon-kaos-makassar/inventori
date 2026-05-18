@@ -452,6 +452,7 @@
 
   // ── STATE ──
   let activeFilter = 'semua';
+  let restockCount = 0;
 
   function setFilter(f) {
     activeFilter = f;
@@ -464,6 +465,15 @@
 
   function applyFilter() {
     const q = normalize(document.getElementById('search-input').value);
+    const isSearching = q.length > 0;
+
+    // Sembunyikan/tampilkan section atas saat mengetik
+    document.getElementById('alert-banner').style.display = isSearching ? 'none' : (restockCount > 0 ? '' : 'none');
+    document.querySelector('.kpi-grid').style.display = isSearching ? 'none' : '';
+    document.querySelectorAll('.sec-title').forEach((el, i) => {
+      if (i === 0) el.style.display = isSearching ? 'none' : ''; // "Ringkasan Inventori"
+    });
+
     document.querySelectorAll('.stock-item').forEach(el => {
       const matchSearch = !q || normalize(el.dataset.name).includes(q);
       const matchFilter = activeFilter === 'semua' || (activeFilter === 'restock' && el.dataset.restock === '1');
@@ -501,7 +511,8 @@
     document.getElementById('kpi-totebag').textContent = fmt(stokTotebag);
     document.getElementById('kpi-celemek').textContent = fmt(stokCelemek);
     document.getElementById('kpi-topi').textContent    = fmt(stokTopi);
-    document.getElementById('kpi-restock').textContent = restockItems.length;
+    restockCount = restockItems.length;
+    document.getElementById('kpi-restock').textContent = restockCount;
     document.getElementById('sub-totebag').textContent = jenisTotebag + ' jenis';
     document.getElementById('sub-celemek').textContent = jenisCelemek + ' jenis';
     document.getElementById('sub-topi').textContent    = jenisTopi + ' jenis';
